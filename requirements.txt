@@ -1,0 +1,2 @@
+kivy[full]
+git+https://github.com/kivymd/KivyMD@master
