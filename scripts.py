@@ -1,5 +1,5 @@
 import sqlite3
-
+import q4
 
 class DatabaseService:
     @staticmethod
@@ -19,6 +19,12 @@ class DatabaseService:
     def insert_tr(massive):
         cursor.execute(f"INSERT INTO training VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
                        (massive[0], massive[1], massive[2], massive[3], massive[4], massive[5], massive[6], massive[7]))
+        db.commit()
+
+    @staticmethod
+    def insert_ex(massive):
+        cursor.execute(f"INSERT INTO exercises VALUES(?, ?, ?, ?, ?, ?, ?)",
+                       (massive[0], massive[1], massive[2], massive[3], massive[4], massive[5], massive[6]))
         db.commit()
 
 
@@ -56,7 +62,7 @@ class DatabaseService:
         calc = Calculation()
         arr = []
         strochka = ''
-        arr1 = ['Дата: ', 'Название:', 'Время: ', 'Подходы: ', 'Повторения: ', "Вес: ", "Тип мышц: "]
+        arr1 = ['Дата: ', '', 'Время: ', 'Подходы: ', 'Повторения: ', "Вес: ", "Тип мышц: "]
         print('План:')
         for i in calc.list_rowid_tr(name_day):
             arr = arr + dbservice.print_value_tr(f'{i}')
@@ -64,10 +70,9 @@ class DatabaseService:
             for j in range(7):
                 if j != 0:
                     if arr[i][j] != 0:
-                        strochka = strochka + f'{arr1[j]}' + f'{arr[i][j]}' + '\n'
-                        strochka = strochka + ' '
-            strochka = strochka + '.'
-        arr1 = strochka.split('.')
+                        strochka = strochka + f'{arr1[j]}' + f'{arr[i][j]}' + '\n' + ' '
+            strochka = strochka + '. '
+        arr1 = strochka.split('. ')
         return arr1
 
     @staticmethod
@@ -124,7 +129,31 @@ class DatabaseService:
             DatabaseService.update_tr(massive,rowik)
         else:
             DatabaseService.insert_tr(massive)
-
+    
+    @staticmethod
+    def find_muscles():
+        cursor.execute("SELECT Specialization from exercises")
+        names = cursor.fetchall()
+        arr = []
+        for i in range(len(names)):
+            arr.append(names[i][0])
+        f = tuple(arr)
+        fafa = set(f)
+        return fafa
+    
+    @staticmethod
+    def find_ex_spec(arr):
+        if arr[1] != 0 or arr[2] != 0 or arr[3] != 0 or arr[4] != 0:
+            if arr[1] == 0:
+                cursor.execute("""SELECT name FROM exercises WHERE Specialization = ? AND (sets = ? OR reps = ? OR weight = ?)""", (arr[0],arr[2],arr[3],arr[4]))
+                sunboy = cursor.fetchall()
+            else:
+                cursor.execute("""SELECT name FROM exercises WHERE Specialization = ? AND Timer = ?""",(arr[0],arr[1],))
+                sunboy = cursor.fetchall()
+        else:
+            cursor.execute("""SELECT name FROM exercises WHERE Specialization = ?""", (arr[0],))
+            sunboy = cursor.fetchall()
+        return sunboy
 
 
 class Calculation:
@@ -151,23 +180,23 @@ class Calculation:
         sunboy = baba
         return sunboy
      
-        
-def list_rowid_ex():
-    cursor.execute("SELECT COUNT(*) FROM exercises")
-    cnt = cursor.fetchone()[0]
-    cursor.execute("SELECT rowid FROM exercises")
-    items = cursor.fetchall()
-    l_rowid = [0]*cnt
-    i = 0
-    for el in items:
-        l_rowid[i] = el[0]
-        i += 1
-    return l_rowid
+    @staticmethod    
+    def list_rowid_ex(): #rowid
+        cursor.execute("SELECT COUNT(*) FROM exercises")
+        cnt = cursor.fetchone()[0]
+        cursor.execute("SELECT rowid FROM exercises")
+        items = cursor.fetchall()
+        l_rowid = [0]*cnt
+        i = 0
+        for el in items:
+            l_rowid[i] = el[0]
+            i += 1
+        return l_rowid
 
 
 def get_ex(rowid):
-    cursor.execute("SELECT name FROM exercises WHERE rowid = ?", rowid)
-    print(cursor.fetchone()[0])
+    cursor.execute("SELECT name FROM exercises WHERE rowid = ?", (rowid,))
+    return cursor.fetchone()[0]
 
 
 def print_allexercises():
@@ -177,6 +206,7 @@ def print_allexercises():
 
 def close_db():
     db.close()
+
 
 
 def main():
@@ -216,4 +246,12 @@ db.commit()
 
 
 if __name__ == '__main__':
-    DatabaseService.print_value_tr('10')
+    arr = [0] * 7
+    arr[0] = 'zaza'
+    arr[1] = 1
+    arr[2] = 1
+    arr[3] = 0
+    arr[4] = 0
+    arr[5] = 'ya'
+    arr[6] = 'Серёга пират'
+    find_muscles()
